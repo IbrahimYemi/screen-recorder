@@ -3,6 +3,7 @@ let recordedChunks = [];
 
 document.getElementById('startBtn').addEventListener('click', async () => {
     try {
+        // Attempt to access screen and audio streams
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
         const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -12,10 +13,11 @@ document.getElementById('startBtn').addEventListener('click', async () => {
             ...audioStream.getAudioTracks()
         ]);
 
+        // Initialize media recorder
         mediaRecorder = new MediaRecorder(combinedStream);
-        
+
         mediaRecorder.ondataavailable = event => recordedChunks.push(event.data);
-        
+
         mediaRecorder.onstop = () => {
             const blob = new Blob(recordedChunks, { type: 'video/webm' });
             const url = URL.createObjectURL(blob);
@@ -24,12 +26,12 @@ document.getElementById('startBtn').addEventListener('click', async () => {
             downloadLink.classList.remove('hidden');
         };
 
+        // Start recording
         mediaRecorder.start();
         document.getElementById('startBtn').disabled = true;
         document.getElementById('stopBtn').disabled = false;
     } catch (error) {
-        displayErrorMessage(error ? error : "⚠️ Oops! Can't access your device media. Please check your permissions.");
-        console.error("Error accessing media devices.", error);
+        handleMediaError(error);
     }
 });
 
@@ -39,9 +41,26 @@ document.getElementById('stopBtn').addEventListener('click', () => {
     document.getElementById('stopBtn').disabled = true;
 });
 
+// Enhanced error handling function
+function handleMediaError(error) {
+    let errorMessage = "⚠️ Oops! Something went wrong.";
+
+    if (error.name === "NotAllowedError") {
+        errorMessage = "⚠️ Permission to access media was denied. Please allow access to your screen and microphone.";
+    } else if (error.name === "NotFoundError") {
+        errorMessage = "⚠️ No media devices found. Make sure your device has a screen and microphone available.";
+    } else if (error.name === "NotSupportedError") {
+        errorMessage = "⚠️ Screen sharing is not supported in this browser or device.";
+    } else {
+        console.error("Error accessing media devices:", error);
+    }
+
+    displayErrorMessage(errorMessage);
+}
+
 function displayErrorMessage(message) {
     let errorContainer = document.getElementById("error-message");
-    
+
     if (!errorContainer) {
         errorContainer = document.createElement("div");
         errorContainer.id = "error-message";
