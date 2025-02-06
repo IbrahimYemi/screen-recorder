@@ -45,8 +45,18 @@
         <h2 class="text-lg md:text-xl font-semibold mb-4 text-center">Record Your Screen with Ease</h2>
         <div class="flex flex-col md:flex-row gap-4 w-full justify-center">
             <button id="startBtn" class="bg-green-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-600 transition w-full md:w-auto">▶ Start Recording</button>
-            <button id="stopBtn" class="bg-red-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-red-600 transition w-full md:w-auto" disabled>⏹ Stop Recording</button>
+            <button id="stopBtn" class="cursor-not-allowed bg-gray-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-gray-600 transition w-full md:w-auto" disabled>⏹ Stop Recording</button>
         </div>
+
+        <!-- Video Preview Section -->
+        <div id="videoPreview" class="hidden mt-4 w-full max-w-md">
+            <video id="previewVideo" controls class="w-full rounded-lg shadow-md"></video>
+            <div class="flex justify-center gap-4 mt-4">
+                <button id="saveBtn" class="bg-blue-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-600 transition w-full md:w-auto">⬇ Save Recording</button>
+                <button id="discardBtn" class="bg-gray-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-gray-600 transition w-full md:w-auto">❌ Discard</button>
+            </div>
+        </div>
+
         <a id="downloadLink" target="_blank" class="hidden mt-4 text-blue-400 underline hover:text-blue-500 transition">⬇ Download Recording</a>
     </main>
     <footer class="mt-8 text-center text-gray-400 text-sm md:text-base">
