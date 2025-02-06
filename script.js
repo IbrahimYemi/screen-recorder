@@ -1,9 +1,50 @@
 let mediaRecorder;
 let videoUrl;
 let recordedChunks = [];
+let timerInterval;
+let recordingDuration = 0;
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 let currentStreams = [];  // To store the active streams for cleanup
+const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+const modifierKey = isMac ? 'metaKey' : 'ctrlKey';
+const startShortcut = document.getElementById('startShortcut');
+const stopShortcut = document.getElementById('stopShortcut');
+const pauseBtn = document.getElementById('pauseBtn');
+const recordingControls = document.getElementById('recordingControls');
+
+// Update shortcuts display
+startShortcut.textContent = `${isMac ? '⌘' : 'Ctrl'} + R`;
+stopShortcut.textContent = `${isMac ? '⌘' : 'Ctrl'} + S`;
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+     // Start recording with Cmd/Ctrl + R
+     if (e[modifierKey] && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        const startBtn = document.getElementById('startBtn');
+        if (!startBtn.disabled) {
+            startBtn.click();
+        }
+    }
+    
+    // Stop recording with Cmd/Ctrl + S
+    if (e[modifierKey] && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        const stopBtn = document.getElementById('stopBtn');
+        if (!stopBtn.disabled) {
+            stopBtn.click();
+        }
+    }
+    
+    // Discard recording with Escape
+    if (e.key === 'Escape') {
+        const discardBtn = document.getElementById('discardBtn');
+        if (discardBtn && !discardBtn.closest('#videoPreview').classList.contains('hidden')) {
+            discardBtn.click();
+        }
+    }
+});
 
 // Start recording
 startBtn.addEventListener('click', async () => {
@@ -15,6 +56,60 @@ startBtn.addEventListener('click', async () => {
 stopBtn.addEventListener('click', () => {
     stopRecording();
 });
+
+// pause button event listener
+pauseBtn.addEventListener('click', () => {
+    if (mediaRecorder.state === 'recording') {
+        pauseRecording();
+        pauseBtn.textContent = '▶ Resume';
+        pauseBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
+        pauseBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+    } else if (mediaRecorder.state === 'paused') {
+        resumeRecording();
+        pauseBtn.textContent = '⏸ Pause';
+        pauseBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+        pauseBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+    }
+});
+
+// timer functions
+function startTimer() {
+    recordingDuration = 0;
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+        recordingDuration++;
+        updateTimerDisplay();
+    }, 1000);
+}
+
+function stopTimer() {
+    clearInterval(timerInterval);
+    recordingDuration = 0;
+    updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+    const hours = Math.floor(recordingDuration / 3600);
+    const minutes = Math.floor((recordingDuration % 3600) / 60);
+    const seconds = recordingDuration % 60;
+    const timerDisplay = document.getElementById('timerDisplay');
+    timerDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+// Add pause/resume functions
+function pauseRecording() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.pause();
+        clearInterval(timerInterval);
+    }
+}
+
+function resumeRecording() {
+    if (mediaRecorder && mediaRecorder.state === 'paused') {
+        mediaRecorder.resume();
+        startTimer();
+    }
+}
 
 // Start the recording process
 async function startRecording() {
@@ -54,7 +149,8 @@ async function startRecording() {
         mediaRecorder.onstop = handleStopRecording;
 
         mediaRecorder.start();
-        
+        startTimer();
+        recordingControls.classList.remove('hidden');
     } catch (error) {
         toggleButtonState(startBtn, 'active');
         toggleButtonState(stopBtn, 'disabled');
@@ -64,6 +160,9 @@ async function startRecording() {
 
 // Stop the recording and cleanup
 function stopRecording() {
+    stopTimer();
+    recordingControls.classList.add('hidden');
+
     // Stop the media recorder
     mediaRecorder.stop();
 
