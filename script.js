@@ -28,7 +28,7 @@ document.getElementById('startBtn').addEventListener('click', async () => {
         document.getElementById('startBtn').disabled = true;
         document.getElementById('stopBtn').disabled = false;
     } catch (error) {
-        displayErrorMessage("⚠️ Oops! Can't access your device media. Please check your permissions.");
+        displayErrorMessage(error ? error : "⚠️ Oops! Can't access your device media. Please check your permissions.");
         console.error("Error accessing media devices.", error);
     }
 });
