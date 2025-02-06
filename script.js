@@ -184,6 +184,7 @@ function displayErrorMessage(message) {
         errorContainer.className = "bg-red-500 text-white p-3 rounded-lg mt-4 text-center shadow-md max-w-md";
         document.body.appendChild(errorContainer);
     }
+    errorContainer.style.display = 'block';
 
     errorContainer.innerHTML = message;
 }
