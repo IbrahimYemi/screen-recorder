@@ -48,7 +48,7 @@ In case of issues with accessing your device media, an error message will appear
 
 ## Demo
 
-Check out the live demo: [Demo Link](#)
+Check out the live demo: [Demo Link](https://screen-recorder-weld.vercel.app)
 
 ## Contributing
 
