@@ -51,7 +51,9 @@ function handleMediaError(error) {
         errorMessage = "⚠️ No media devices found. Make sure your device has a screen and microphone available.";
     } else if (error.name === "NotSupportedError") {
         errorMessage = "⚠️ Screen sharing is not supported in this browser or device.";
-    } else {
+    } else if (error.name === "TypeError") {
+        errorMessage = "⚠️ Device not supported! Please try a different device.";
+    }  {
         console.error("Error accessing media devices:", error);
     }
 
