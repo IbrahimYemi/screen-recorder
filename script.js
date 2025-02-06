@@ -53,7 +53,7 @@ function handleMediaError(error) {
         errorMessage = "⚠️ Screen sharing is not supported in this browser or device.";
     } else if (error.name === "TypeError") {
         errorMessage = "⚠️ Device not supported! Please try a different device.";
-    }  {
+    } else {
         console.error("Error accessing media devices:", error);
     }
 
