@@ -20,33 +20,65 @@ stopBtn.addEventListener('click', () => {
 async function startRecording() {
     try {
         if (videoUrl) {
-            displayErrorMessage("⚠️ Cannot start new recording while previous one is still in preview");
+            displayErrorMessage("⚠️ Cannot start a new recording while the previous one is still in preview.");
             return;
         }
 
         toggleButtonState(startBtn, 'disabled');
         toggleButtonState(stopBtn, 'active');
 
-        // Access media streams
-        const [screenStream, audioStream] = await Promise.all([
-            navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }),
-            navigator.mediaDevices.getUserMedia({ audio: true })
-        ]);
+        // Notify users about system audio limitations
+        if (!navigator.userAgent.includes("Chrome")) {
+            displayWarningMessage(
+                "⚠️ System audio capture is only fully supported on Google Chrome (Windows). " +
+                "Other browsers may not capture system audio, or it may not work as expected."
+            );
+        }
 
-        screenStream.getTracks().forEach(track => {
-            track.onended = function () {
-                stopRecording();
-            };
-        })
+        // Access screen media with system audio (for Chrome)
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: {
+                systemAudio: 'include', // Chrome-specific
+                echoCancellation: false,
+                noiseSuppression: false
+            }
+        });
 
-        // Combine the screen and audio streams
+        // Access microphone audio
+        const micStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true
+            }
+        });
+
+        // Handle screen sharing stop (user stops sharing manually)
+        screenStream.getVideoTracks()[0].onended = function () {
+            stopRecording();
+        };
+
+        // Extract tracks
+        const screenAudioTrack = screenStream.getAudioTracks()[0];
+        const micAudioTrack = micStream.getAudioTracks()[0];
+
+        // Warn if system audio is not available
+        if (!screenAudioTrack) {
+            displayWarningMessage(
+                "⚠️ System audio was not detected. Ensure you selected a tab/window with audio or use Google Chrome on Windows. " +
+                "On Mac, system audio capture is limited and may require third-party software like Loopback or BlackHole."
+            );
+        }
+
+        // Create a combined stream (video + both audio)
         const combinedStream = new MediaStream([
             ...screenStream.getVideoTracks(),
-            ...audioStream.getAudioTracks()
+            ...(screenAudioTrack ? [screenAudioTrack] : []), // system audio if available
+            micAudioTrack
         ]);
 
         // Store streams for cleanup later
-        currentStreams = [screenStream, audioStream];
+        currentStreams = [screenStream, micStream];
 
         // Initialize media recorder
         mediaRecorder = new MediaRecorder(combinedStream);
@@ -54,7 +86,7 @@ async function startRecording() {
         mediaRecorder.onstop = handleStopRecording;
 
         mediaRecorder.start();
-        
+
     } catch (error) {
         toggleButtonState(startBtn, 'active');
         toggleButtonState(stopBtn, 'disabled');
